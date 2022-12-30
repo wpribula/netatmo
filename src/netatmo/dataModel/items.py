@@ -16,16 +16,22 @@ class Item:
 
 class Items:
     Item_Obj = Item
+    items = {}
     
-    def __init__(self, netatmo_api : NetatmoApi, data : dict = None, status_data = None):
+    def __init__(self, netatmo_api : NetatmoApi):
         self._netatmo_api = netatmo_api
+
+            
+    def add_data(self, data : dict = None, status_data = None):
+        ids = []
         data = self._get_data(data)
-        self.items = {}
         for item in data:
             obj = self.Item_Obj(item, self._netatmo_api)
             if status_data:
                 obj.add_status(status_data)
-            self.items.update({obj.id:obj})
+            self.__class__.items.update({obj.id:obj})
+            ids.append(obj.id)
+        return ids
             
             
     def _get_data(self, data : dict):

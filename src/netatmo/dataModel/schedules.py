@@ -20,7 +20,7 @@ class Schedule(Item):
         self.hg_temp = data['hg_temp'] if 'hg_temp' in data.keys() else None
         self.selected = data['selected'] if 'selected' in data.keys() else None
         
-        self.zones = Zones(self._netatmo_api, data['zones']) if 'zones' in data.keys() else None
+        self.zones_ids = Zones(self._netatmo_api).add_data(data['zones']) if 'zones' in data.keys() else None
         self.time_table_df = self._process_timetable(data['timetable']) if 'timetable' in data.keys() else None
     
     
@@ -53,9 +53,9 @@ class Schedule(Item):
             
     def _add_zones_information(self):
         zones = []
-        for zone in self.zones.items.values():
-            for room_id in zone.rooms:
-                zones.append([zone.id, zone.name, room_id, zone.rooms[room_id]])
+        for zone_id in self.zones_ids:
+            for room_id in Zones.items[zone_id].rooms_setpoints:
+                zones.append([zone_id, Zones.items[zone_id].name, room_id, Zones.items[zone_id].rooms_setpoints[room_id]])
         self.zones_df = pd.DataFrame(zones)
         self.zones_df.columns = ['zone_id', 'zone_name', 'room_id', 'temperature']
         self.time_table_df = self.time_table_df.merge(self.zones_df, how='left', on='zone_id')
@@ -107,6 +107,7 @@ class Schedule(Item):
 
 class Schedules(Items):
     Item_Obj = Schedule
+    items = {}
 
     def get_data(self):
         pass

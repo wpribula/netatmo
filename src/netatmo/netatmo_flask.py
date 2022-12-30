@@ -24,7 +24,7 @@ def login():
     
 @app.route("/home/")
 def home():
-    return render_template('index.j2', homes=data.get_homes_data(netatmo_api))
+    return render_template('index.j2', data=data.load_data(netatmo_api))
 
 
 @app.route("/token/")

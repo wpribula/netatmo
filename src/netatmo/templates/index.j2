@@ -10,7 +10,7 @@
         <h1>Netatmo thermostat - monitoring</h1>
     </header>
     <article>
-        {% for home in homes.items.values() %}
+        {% for home_id in data.homes_ids %}
             {% include 'home.j2' %}
         {% endfor %}
     </article>

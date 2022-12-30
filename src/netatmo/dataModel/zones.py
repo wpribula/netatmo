@@ -14,9 +14,9 @@ class Zone(Item):
         
         
     def _process_rooms(self, rooms_data):
-        self.rooms = {}
+        self.rooms_setpoints = {}
         for room in rooms_data:
-            self.rooms.update({room['id']:room['therm_setpoint_temperature']})
+            self.rooms_setpoints.update({room['id']:room['therm_setpoint_temperature']})
     
     
     def __str__(self):
@@ -27,6 +27,7 @@ class Zone(Item):
 
 class Zones(Items):
     Item_Obj = Zone
+    items = {}
 
     def get_data(self):
         pass

@@ -1,24 +1,24 @@
 <article class="home">
     <header>
-        <h1>{{ home.name }}</h1>
-        {# <h3>{{ home.status }}</h3> #}
+        <h1>{{ data.homes.items[home_id].name }}</h1>
+        {# <h3>{{ data.homes.items[home_id]..status }}</h3> #}
         <table>
             <tr>
                 <td>Control mode</td>
-                <td>{{ home.temperature_control_mode }}</td>
+                <td>{{ data.homes.items[home_id].temperature_control_mode }}</td>
             </tr>
             <tr>
                 <td>Mode</td>
-                <td>{{ home.therm_mode }}</td>
+                <td>{{ data.homes.items[home_id].therm_mode }}</td>
             </tr>
             <tr>
                 <td>Manual set point duration</td>
-                <td>{{ home.therm_setpoint_default_duration }} min</td>
+                <td>{{ data.homes.items[home_id].therm_setpoint_default_duration }} min</td>
             </tr>
         </table>
     </header>
     <div>
-        {% for room in home.rooms.items.values() %}
+        {% for room_id in data.homes.items[home_id].rooms_ids %}
             {% include 'room.j2' %}
         {% endfor %}
     </div>

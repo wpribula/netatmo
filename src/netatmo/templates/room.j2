@@ -1,21 +1,21 @@
 <article class="room">
     <header class="room">
         <header class="room_name">
-            <h1>{{ room.name }}</h1>
-            <h3>{{ room.type }}</h3>
-            <p>Mode: {{ room.therm_setpoint_mode }}</p>
-            <p>Point: {{ room.therm_setpoint_fp }}</p>
+            <h1>{{ data.rooms.items[room_id].name }}</h1>
+            <h3>{{ data.rooms.items[room_id].type }}</h3>
+            <p>Mode: {{ data.rooms.items[room_id].therm_setpoint_mode }}</p>
+            <p>Point: {{ data.rooms.items[room_id].therm_setpoint_fp }}</p>
         </header>
         <article class="temperature">
-            <p class="power_request">{{ room.heating_power_request }}%</p>
-            <p class="measured">{{ room.therm_measured_temperature }} &degC</p>
-            <p class="setpoint">{{ room.therm_setpoint_temperature }} &degC
+            <p class="power_request">{{ data.rooms.items[room_id].heating_power_request }}%</p>
+            <p class="measured">{{ data.rooms.items[room_id].therm_measured_temperature }} &degC</p>
+            <p class="setpoint">{{ data.rooms.items[room_id].therm_setpoint_temperature }} &degC
         </article>
-    </header>
-    {% for module in home.get_modules_for_room(room.id) %}
+    </header>modules_ids
+    {% for module_id in data.rooms.items[room_id].modules_ids %}
         {% include 'module.j2' %}
     {% endfor %}
-    {% for schedule in home.schedules.items.values() %}
+    {% for schedule_id in home.schedules_ids %}
         {% include 'schedule.j2' %}
     {% endfor %}
 </article>

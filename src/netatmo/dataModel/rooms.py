@@ -10,7 +10,7 @@ class Room(Item):
         self.id = data['id'] if 'id' in data.keys() else None
         self.name = data['name'] if 'name' in data.keys() else None
         self.type = data['type'] if 'type' in data.keys() else None
-        self.module_ids = data['module_ids'] if 'module_ids' in data.keys() else None
+        self.modules_ids = data['module_ids'] if 'module_ids' in data.keys() else None
         self.home_id = None
         
     def add_status(self, status_data : dict):
@@ -98,6 +98,7 @@ class Room(Item):
 class Rooms(Items):
     Item_Obj = Room
     data_path =  os.path.join(os.path.dirname(__file__), r"temperature_data.csv")
+    items = {}
     
     def get_data(self):
         pass
