@@ -1,10 +1,11 @@
 import datetime
 import pandas as pd
 
-from dataModel.rooms import Rooms
-from dataModel.modules import Modules
-from dataModel.schedules import Schedules
-from dataModel.items import Items, Item
+from netatmo.dataModel.rooms import Rooms
+from netatmo.dataModel.modules import Modules
+from netatmo.dataModel.schedules import Schedules
+from netatmo.dataModel.items import Items, Item
+from netatmo.netatmo_api.netatmo_api import NetatmoApi
    
         
         
@@ -20,21 +21,21 @@ class Home(Item):
         self.therm_mode = data['therm_mode'] if 'therm_mode' in data.keys() else None
         self.therm_setpoint_default_duration = data['therm_setpoint_default_duration'] if 'therm_setpoint_default_duration' in data.keys() else None
         
-        self.schedules_ids = Schedules(self._netatmo_api).add_data(data['schedules']) if 'schedules' in data.keys() else None
+        self.schedules_ids = Schedules.add_data(self._netatmo_api, data['schedules']) if 'schedules' in data.keys() else None
         
         self._status_raw = self._get_home_status()
         self.status = self._status_raw['status'] if 'status' in self._status_raw.keys() else None
         self.time_server = self._status_raw['time_server'] if 'time_server' in self._status_raw.keys() else None
         
         try:
-            self.modules_ids = Modules(self._netatmo_api).add_data(data['modules'], status_data = self._status_raw['body']['home']['modules']) if 'modules' in data.keys() else None
+            self.modules_ids = Modules.add_data(self._netatmo_api, data['modules'], status_data = self._status_raw['body']['home']['modules']) if 'modules' in data.keys() else None
         except KeyError:
-            self.modules_ids = Modules(self._netatmo_api).add_data(data['modules']) if 'modules' in data.keys() else None
+            self.modules_ids = Modules.add_data(self._netatmo_api, data['modules']) if 'modules' in data.keys() else None
             
         try: 
-            self.rooms_ids = Rooms(self._netatmo_api).add_data(data['rooms'], status_data = self._status_raw['body']['home']['rooms']) if 'rooms' in data.keys() else None
+            self.rooms_ids = Rooms.add_data(self._netatmo_api, data['rooms'], status_data = self._status_raw['body']['home']['rooms']) if 'rooms' in data.keys() else None
         except KeyError:
-            self.rooms_ids = Rooms(self._netatmo_api).add_data(data['rooms']) if 'rooms' in data.keys() else None
+            self.rooms_ids = Rooms.add_data(self._netatmo_api, data['rooms']) if 'rooms' in data.keys() else None
         self._add_home_id_to_rooms()
         return
     
@@ -78,20 +79,8 @@ class Home(Item):
 class Homes(Items):
     Item_Obj = Home
     
-    def _get_data(self, data : dict = None):
-        data = self._netatmo_api.api_request('homesdata')
-        return data['body']['homes']
     
-
-    def get_room_by_id(self, id):
-        for home in self.items:
-            for room in home.rooms.items:
-                if room.id == id:
-                    return room, home
-                
-                
-    def get_room_by_name(self, name):
-        for home in self.items:
-            for room in home.rooms.items:
-                if room.name == name:
-                    return room, home
+    @staticmethod
+    def _get_data(data : dict = None, netatmo_api : NetatmoApi = None):
+        data = netatmo_api.api_request('homesdata')
+        return data['body']['homes']

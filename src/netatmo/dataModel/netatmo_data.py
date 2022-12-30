@@ -29,7 +29,7 @@ class NetatmoData():
     
     def _load_homes_data(self, netatmo_api : NetatmoApi):
         self._reset_data()
-        self.homes_ids = self.homes(netatmo_api).add_data()
+        self.homes_ids = Homes.add_data(netatmo_api)
         self.last_update = datetime.datetime.now()
         
         

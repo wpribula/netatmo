@@ -98,10 +98,7 @@ class Room(Item):
 class Rooms(Items):
     Item_Obj = Room
     data_path =  os.path.join(os.path.dirname(__file__), r"temperature_data.csv")
-    items = {}
     
-    def get_data(self):
-        pass
     
     def add_home_id(self, home_id):
         for room_id in self.items:

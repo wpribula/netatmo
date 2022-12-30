@@ -20,7 +20,7 @@ class Schedule(Item):
         self.hg_temp = data['hg_temp'] if 'hg_temp' in data.keys() else None
         self.selected = data['selected'] if 'selected' in data.keys() else None
         
-        self.zones_ids = Zones(self._netatmo_api).add_data(data['zones']) if 'zones' in data.keys() else None
+        self.zones_ids = Zones.add_data(self._netatmo_api, data['zones']) if 'zones' in data.keys() else None
         self.time_table_df = self._process_timetable(data['timetable']) if 'timetable' in data.keys() else None
     
     
@@ -107,7 +107,3 @@ class Schedule(Item):
 
 class Schedules(Items):
     Item_Obj = Schedule
-    items = {}
-
-    def get_data(self):
-        pass

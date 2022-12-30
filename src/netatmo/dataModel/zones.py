@@ -27,7 +27,4 @@ class Zone(Item):
 
 class Zones(Items):
     Item_Obj = Zone
-    items = {}
-
-    def get_data(self):
-        pass
+    

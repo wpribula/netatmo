@@ -86,7 +86,4 @@ class Module(Item):
 
 class Modules(Items):
     Item_Obj = Module
-    items = {}
     
-    def get_data(self):
-        pass     

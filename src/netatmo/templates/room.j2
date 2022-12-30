@@ -15,7 +15,7 @@
     {% for module_id in data.rooms.items[room_id].modules_ids %}
         {% include 'module.j2' %}
     {% endfor %}
-    {% for schedule_id in home.schedules_ids %}
+    {% for schedule_id in data.homes.items[home_id].schedules_ids %}
         {% include 'schedule.j2' %}
     {% endfor %}
 </article>

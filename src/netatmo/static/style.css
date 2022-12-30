@@ -2,7 +2,7 @@
     --main-color: #006E7F;
     --secondary-color: #B22727;
     --third-color: #EE5007;
-    --fourth-color: #F8CB2E;
+    --fourth-color: #e4b717;
     --table-background: #E9E9E9;
     --table-background2: #F3F3F3;
   }
@@ -202,4 +202,31 @@ img.state_icon {
 
 img.schedule_plot {
     width: 100%;
+}
+
+
+
+article.schedule {
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 10pt;
+    padding: 5px;
+    margin: 15px 5px 5px 5px;
+    border-color: var(--fourth-color);
+    text-align: center;
+    /* display: inline-block; */
+}
+
+article.schedule header h1 {
+    font-size: medium;
+    text-transform: uppercase;
+    font-family: sans-serif;
+    color: var(--fourth-color);
+    padding: 0px;
+    margin: 5px 0px 0px 0px;
+}
+
+article.schedule header h3 {
+    text-transform: uppercase;
+    font-size: small;
 }
