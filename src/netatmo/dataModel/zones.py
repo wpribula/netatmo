@@ -1,4 +1,5 @@
 from dataModel.items import Items, Item
+from netatmo.netatmo_api.netatmo_api import NetatmoApi
 
         
 class Zone(Item):
@@ -17,13 +18,7 @@ class Zone(Item):
         self.rooms_setpoints = {}
         for room in rooms_data:
             self.rooms_setpoints.update({room['id']:room['therm_setpoint_temperature']})
-    
-    
-    def __str__(self):
-        return f"""Name: {self.name}
-    Selected: {self.selected}
-    """
-        
+            
 
 class Zones(Items):
     Item_Obj = Zone

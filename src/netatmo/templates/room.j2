@@ -19,7 +19,7 @@
         <a class="link_button" href="/plot/room/daily/{{ room_id }}/15">15 days</a>
         <a class="link_button" href="/plot/room/daily/{{ room_id }}/30">30 days</a>
         <a class="link_button" href="/plot/room/cumulative/{{ room_id }}/7">7 days cumulative</a>
-        <a class="link_button" href="/plot/roomcumulative/{{ room_id }}/30">30 days cumulative</a>
+        <a class="link_button" href="/plot/room/cumulative/{{ room_id }}/30">30 days cumulative</a>
     </div>
     {% for module_id in data.rooms.items[room_id].modules_ids %}
         {% include 'module.j2' %}

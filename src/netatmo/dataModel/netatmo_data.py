@@ -28,18 +28,9 @@ class NetatmoData():
     
     
     def _load_homes_data(self, netatmo_api : NetatmoApi):
-        self._reset_data()
         self.homes_ids = Homes.add_data(netatmo_api)
         self.last_update = datetime.datetime.now()
         
-        
-    def _reset_data(self):
-        Homes.items = {}
-        Rooms.items = {}
-        Schedules.items = {}
-        Modules.items = {}
-        Zones.items = {}
-    
             
     def get_timeseries_df(self) -> pd.DataFrame:
         data_df = pd.DataFrame

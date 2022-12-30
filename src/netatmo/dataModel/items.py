@@ -30,6 +30,18 @@ class Items:
             cls.items.update({obj.id:obj})
             ids.append(obj.id)
         return ids
+    
+    
+    @classmethod
+    def get_data(cls, netatmo_api : NetatmoApi = None, data : dict = None, status_data = None):
+        items = {}
+        data = cls._get_data(data, netatmo_api)
+        for item in data:
+            obj = cls.Item_Obj(item, netatmo_api)
+            if status_data:
+                obj.add_status(status_data)
+            items.update({obj.id:obj})
+        return items
             
     
     @staticmethod

@@ -7,6 +7,7 @@ from io import BytesIO
 from matplotlib.figure import Figure
 
 from dataModel.items import Items, Item
+from dataModel.schedules import Schedules, Schedule
 
     
 class Room(Item):
@@ -16,6 +17,7 @@ class Room(Item):
         self.type = data['type'] if 'type' in data.keys() else None
         self.modules_ids = data['module_ids'] if 'module_ids' in data.keys() else None
         self.home_id = None
+        self.schedules_ids = None
         
     def add_status(self, status_data : dict):
         for item_status in status_data:
@@ -83,7 +85,18 @@ class Room(Item):
         for value in response['body']['home']['values']:
             values.append([value_time, value])
             value_time = value_time + step
+            
+    #=================================================================================
+    #                      SCHEDULE
+    #=================================================================================
+    def get_active_schedule(self) -> Schedule:
+        for schedule_id in self.schedules_ids:
+            if Schedules.items[schedule_id].selected:
+                return Schedules.items[schedule_id]
     
+    
+    def get_schedule_data_for_day(self, day) -> pd.Series:
+        return self.get_active_schedule().get_schedule_data_for_room_and_day(self.id, day)
         
         
     def __str__(self):
@@ -205,9 +218,9 @@ class Rooms(Items):
         ax_idx = days_to_display - 1
         for _, day_data_df in data_df.groupby('days'):
             if cumulative:
-                axs = cls._generate_axs(axs, day_data_df, cumulative)
+                axs = cls._generate_axs(axs, day_data_df, room_id, cumulative)
             else:
-                axs[ax_idx] = cls._generate_axs(axs[ax_idx], day_data_df, cumulative)
+                axs[ax_idx] = cls._generate_axs(axs[ax_idx], day_data_df, room_id, cumulative)
                 ax_idx -= 1
         # Save it to a temporary buffer.
         buf = BytesIO()
@@ -216,13 +229,21 @@ class Rooms(Items):
         data = base64.b64encode(buf.getbuffer()).decode("ascii")
         return f"data:image/png;base64,{data}"
     
+    
     @classmethod
-    def _generate_axs(cls, axs, day_data_df, cumulative):
+    def _generate_axs(cls, axs, day_data_df, room_id, cumulative):
+        week_day = day_data_df['datetime'].min().weekday() + 1
         day_data_df.index = day_data_df['datetime'].dt.hour + day_data_df['datetime'].dt.minute / 60
         axs.plot(day_data_df.loc[day_data_df['type'] == 'temperature', ['value']],
-                            linewidth=0.5)
-        axs.plot(day_data_df.loc[day_data_df['type'] == 'sp_temperature', ['value']],
-                 color='red',
+                 color='green',
+                 linewidth=0.5)
+        if not cumulative:
+            axs.plot(day_data_df.loc[day_data_df['type'] == 'sp_temperature', ['value']],
+                    color='red',
+                    drawstyle="steps-post",
+                    linewidth=2)
+        axs.plot(cls.items[room_id].get_schedule_data_for_day(week_day),
+                 color='blue',
                  drawstyle="steps-post",
                  linewidth=2)
         if cumulative:
@@ -238,3 +259,4 @@ class Rooms(Items):
         axs.yaxis.set_tick_params(labelsize=15)
         axs.grid(True)
         return axs
+    

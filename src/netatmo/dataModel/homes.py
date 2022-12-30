@@ -3,7 +3,7 @@ import pandas as pd
 
 from netatmo.dataModel.rooms import Rooms
 from netatmo.dataModel.modules import Modules
-from netatmo.dataModel.schedules import Schedules
+from netatmo.dataModel.schedules import Schedules, Schedule
 from netatmo.dataModel.items import Items, Item
 from netatmo.netatmo_api.netatmo_api import NetatmoApi
    
@@ -36,13 +36,14 @@ class Home(Item):
             self.rooms_ids = Rooms.add_data(self._netatmo_api, data['rooms'], status_data = self._status_raw['body']['home']['rooms']) if 'rooms' in data.keys() else None
         except KeyError:
             self.rooms_ids = Rooms.add_data(self._netatmo_api, data['rooms']) if 'rooms' in data.keys() else None
-        self._add_home_id_to_rooms()
+        self._add_home_id_and_schdules_to_rooms()
         return
     
     
-    def _add_home_id_to_rooms(self):
+    def _add_home_id_and_schdules_to_rooms(self):
         for room_id in self.rooms_ids:
             Rooms.items[room_id].home_id = self.id
+            Rooms.items[room_id].schedules_ids = self.schedules_ids
     
     
     def _homestatus_url_data(self) -> dict:
@@ -59,6 +60,12 @@ class Home(Item):
     
     def get_timeseries_data(self) -> pd.DataFrame:
         return self.rooms_ids.get_timeseries_data()
+            
+            
+    def get_active_schedule(self) -> Schedule:
+        for schedule_id in self.schedules_ids:
+            if Schedules.items[schedule_id].active:
+                return Schedules.items[schedule_id]
             
     
     def __str__(self):
@@ -84,3 +91,4 @@ class Homes(Items):
     def _get_data(data : dict = None, netatmo_api : NetatmoApi = None):
         data = netatmo_api.api_request('homesdata')
         return data['body']['homes']
+    
