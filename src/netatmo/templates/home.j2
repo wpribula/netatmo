@@ -1,0 +1,25 @@
+<article class="home">
+    <header>
+        <h1>{{ home.name }}</h1>
+        {# <h3>{{ home.status }}</h3> #}
+        <table>
+            <tr>
+                <td>Control mode</td>
+                <td>{{ home.temperature_control_mode }}</td>
+            </tr>
+            <tr>
+                <td>Mode</td>
+                <td>{{ home.therm_mode }}</td>
+            </tr>
+            <tr>
+                <td>Manual set point duration</td>
+                <td>{{ home.therm_setpoint_default_duration }} min</td>
+            </tr>
+        </table>
+    </header>
+    <div>
+        {% for room in home.rooms.items.values() %}
+            {% include 'room.j2' %}
+        {% endfor %}
+    </div>
+</article>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+    <title>Netatmo termostat - monitoring</title>
+</head>
+<body>
+    <header class="main">
+        <h1>Netatmo thermostat - monitoring</h1>
+    </header>
+    <article>
+        {% for home in homes.items.values() %}
+            {% include 'home.j2' %}
+        {% endfor %}
+    </article>
+</body>
+</html>

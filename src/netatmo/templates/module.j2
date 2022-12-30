@@ -1,0 +1,74 @@
+<article class="module">
+    <header>
+        <h1>{{ module.name }}</h1>
+        <h3>{{ module.type }}</h3>
+        <div class="state_icons">
+            {% if module.reachable %} 
+                <img src="{{ url_for('static', filename='images/reachable.png') }}"" title="Module is reachable" class="state_icon"/>
+            {% elif module.reachable is not none %} 
+                <img src="{{ url_for('static', filename='images/unreachable.png') }}"" title="Module is unreachable" class="state_icon"/>
+            {% endif %}   
+            {% if module.battery_state == module.battery_states[4] %} 
+                <img src="{{ url_for('static', filename='images/battery_full.png') }}"" title="Battery full" class="state_icon"/>
+            {% elif module.battery_state == module.battery_states[3] %} 
+                <img src="{{ url_for('static', filename='images/battery_high.png') }}"" title="Battery high" class="state_icon"/>
+            {% elif module.battery_state == module.battery_states[2] %} 
+                <img src="{{ url_for('static', filename='images/battery_medium.png') }}"" title="Battery medium" class="state_icon"/>
+            {% elif module.battery_state == module.battery_states[1] %} 
+                <img src="{{ url_for('static', filename='images/battery_low.png') }}"" title="Battery low" class="state_icon"/>
+            {% elif module.battery_state == module.battery_states[0] %} 
+                <img src="{{ url_for('static', filename='images/battery_very_low.png') }}"" title="Battery very low" class="state_icon"/>
+            {% endif %}     
+            {% if module.boiler_status %} 
+                <img src="{{ url_for('static', filename='images/boiler_on.png') }}"" title="Boiler ON" class="state_icon"/>
+            {% endif %}     
+            {% if module.boiler_valve_comfort_boost %} 
+                <img src="{{ url_for('static', filename='images/valve_boost.png') }}"" title="Comfort boost ON" class="state_icon"/>
+            {% endif %}    
+            {% if module.boiler_error %} 
+                <img src="{{ url_for('static', filename='images/error.png') }}"" title="Boiler error" class="state_icon"/>
+            {% endif %}     
+        </div>
+    </header>
+    {% if module.boiler_error is not none %}
+        <p class="error">{{ module.boiler_error }}</p>
+    {% endif %}     
+    <table>
+        {% if module.firmware_revision is not none %} 
+        <tr>
+            <td>Firmvare version</td>
+            <td>{{ module.firmware_revision }}</td>
+        </tr>
+        {% endif %}
+        {% if module.rf_strenght is not none %} 
+        <tr>
+            <td>Signal strengt</td>
+            <td>{{ module.rf_strenght }}</td>
+        </tr>
+        {% endif %}
+        {% if module.wifi_strenght is not none %} 
+        <tr>
+            <td>Wifi strengt</td>
+            <td>{{ module.wifi_strenght }}</td>
+        </tr>
+        {% endif %}
+        {% if module.boiler_control is not none %} 
+        <tr>
+            <td>Control type</td>
+            <td>{{ module.boiler_control }}</td>
+        </tr>
+        {% endif %}
+        {% if module.dhw_control is not none %} 
+        <tr>
+            <td>Domestic hot water control</td>
+            <td>{{ module.dhw_control }}</td>
+        </tr>
+        {% endif %}
+        {% if module.last_seen is not none %} 
+        <tr>
+            <td>Last seen</td>
+            <td>{{ module.last_seen }}</td>
+        </tr>
+        {% endif %}
+    </table>
+</article>

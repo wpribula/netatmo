@@ -1,0 +1,23 @@
+<article class="room">
+    <header class="room">
+        <header class="room_name">
+            <h1>{{ room.name }}</h1>
+            <h3>{{ room.type }}</h3>
+            <p>Mode: {{ room.therm_setpoint_mode }}</p>
+            <p>Point: {{ room.therm_setpoint_fp }}</p>
+        </header>
+        <article class="temperature">
+            <p class="power_request">{{ room.heating_power_request }}%</p>
+            <p class="measured">{{ room.therm_measured_temperature }} &degC</p>
+            <p class="setpoint">{{ room.therm_setpoint_temperature }} &degC
+        </article>
+    </header>
+    {% for module in home.get_modules_for_room(room.id) %}
+        {% include 'module.j2' %}
+    {% endfor %}
+    {% for schedule in home.schedules.items.values() %}
+        {% include 'schedule.j2' %}
+    {% endfor %}
+</article>
+
+
