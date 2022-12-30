@@ -37,10 +37,11 @@ def token():
     return redirect('/home/')
 
 
-@app.route("/plot/room/<string:room_id>/<int:days>")
-def plot(room_id, days):
-    return render_template('plot.j2', data=Rooms.get_plot_from_date(room_id, days=days))
-    
+@app.route("/plot/room/<string:plot_type>/<string:room_id>/<int:days>")
+def plot(plot_type, room_id, days):
+    data.load_data(netatmo_api)
+    return render_template('plot.j2', data=Rooms.get_plot_from_date(room_id, days=days, cumulative=(plot_type=='cumulative')))
+
 
 if __name__ == "__main__":
     app.run(port=80)

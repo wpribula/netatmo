@@ -130,7 +130,7 @@ class Rooms(Items):
     @classmethod
     def _save_timeseries_data(cls):
         cls._timeseries_df.drop_duplicates(inplace=True)
-        cls._timeseries_df.to_csv(cls._data_path)
+        cls._timeseries_df.to_csv(cls._data_path, index=False)
         
         
     @classmethod
@@ -182,41 +182,59 @@ class Rooms(Items):
         
         
     @classmethod
-    def get_plot_from_date(cls, room_id, from_date : datetime.datetime = None, days = None):
+    def get_plot_from_date(cls, room_id, from_date : datetime.datetime = None, days = None, cumulative : bool = False):
         if days:
-            from_date = datetime.datetime.combine((datetime.datetime.now() - datetime.timedelta(days=7)).date(), datetime.time.min)
+            from_date = datetime.datetime.combine((datetime.datetime.now() - datetime.timedelta(days=days)).date(), datetime.time.min)
         data_df = cls.get_timeseries_for_room_id(room_id, from_date)
         data_df['days'] = (data_df['datetime'].dt.to_pydatetime() - datetime.datetime.min).astype('timedelta64[D]').astype(int)
         data_df.set_index('datetime', drop=False, inplace=True)
         data_df.sort_index(inplace=True)
-        days_to_display = (datetime.datetime.now() - from_date).days + 1
+        if cumulative:
+            days_to_display = 1 
+        else:
+            days_to_display = (datetime.datetime.now() - from_date).days + 1 
         # Generate the figure **without using pyplot**.,
         fig = Figure()
-        fig.set_size_inches(10, days_to_display * 3)
+        fig.set_size_inches(10, (days_to_display + int(cumulative)) * 3)
         fig.tight_layout()
-        fig.subplots_adjust(hspace=0.3, top=0.98, bottom=0.02)
+        if cumulative:
+            fig.subplots_adjust(top=0.9, bottom=0.1)
+        else:
+            fig.subplots_adjust(hspace=0.3, top=0.98, bottom=0.02)
         axs = fig.subplots(days_to_display,1)
         ax_idx = days_to_display - 1
         for _, day_data_df in data_df.groupby('days'):
-            day_data_df.index = day_data_df['datetime'].dt.hour + day_data_df['datetime'].dt.minute / 60
-            axs[ax_idx].plot(day_data_df.loc[day_data_df['type'] == 'temperature', ['value']],
-                                linewidth=2)
-            axs[ax_idx].plot(day_data_df.loc[day_data_df['type'] == 'sp_temperature', ['value']],
-                                drawstyle="steps-post",
-                                linewidth=2)
-            axs[ax_idx].set_title(day_data_df['datetime'].dt.to_pydatetime().min().strftime("%A %d.%m.%Y"))
-            axs[ax_idx].title.set_fontsize(18)
-            axs[ax_idx].set_xlim([0,24])
-            axs[ax_idx].xaxis.set_tick_params(labelsize=15)
-            axs[ax_idx].set_xticks(range(0,25))
-            axs[ax_idx].set_ylim([day_data_df['value'].min() - 1, day_data_df['value'].max() + 1])
-            axs[ax_idx].set_yticks(np.arange(day_data_df['value'].min() // 1, day_data_df['value'].max() + 1, 1.0))
-            axs[ax_idx].yaxis.set_tick_params(labelsize=15)
-            axs[ax_idx].grid()
-            ax_idx -= 1
+            if cumulative:
+                axs = cls._generate_axs(axs, day_data_df, cumulative)
+            else:
+                axs[ax_idx] = cls._generate_axs(axs[ax_idx], day_data_df, cumulative)
+                ax_idx -= 1
         # Save it to a temporary buffer.
         buf = BytesIO()
         fig.savefig(buf, format="png")
         # Embed the result in the html output.
         data = base64.b64encode(buf.getbuffer()).decode("ascii")
         return f"data:image/png;base64,{data}"
+    
+    @classmethod
+    def _generate_axs(cls, axs, day_data_df, cumulative):
+        day_data_df.index = day_data_df['datetime'].dt.hour + day_data_df['datetime'].dt.minute / 60
+        axs.plot(day_data_df.loc[day_data_df['type'] == 'temperature', ['value']],
+                            linewidth=0.5)
+        axs.plot(day_data_df.loc[day_data_df['type'] == 'sp_temperature', ['value']],
+                 color='red',
+                 drawstyle="steps-post",
+                 linewidth=2)
+        if cumulative:
+            axs.set_title("Cumulative")
+        else:
+            axs.set_title(day_data_df['datetime'].dt.to_pydatetime().min().strftime("%A %d.%m.%Y"))
+        axs.title.set_fontsize(18)
+        axs.set_xlim([0,24])
+        axs.xaxis.set_tick_params(labelsize=15)
+        axs.set_xticks(range(0,25))
+        axs.set_ylim([day_data_df['value'].min() - 1, day_data_df['value'].max() + 1])
+        axs.set_yticks(np.arange(day_data_df['value'].min() // 1, day_data_df['value'].max() + 1, 1.0))
+        axs.yaxis.set_tick_params(labelsize=15)
+        axs.grid(True)
+        return axs

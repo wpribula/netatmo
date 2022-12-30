@@ -112,6 +112,23 @@ article.room header.room header.room_name h1 {
     width: 100%;
 }
 
+article.room a.link_button {
+    text-decoration: None;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: smaller;
+    color: white;
+    background-color: var(--third-color);
+    padding: 7px 15px;
+    margin: 3px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+article.room div.plots_links{
+    margin-top: 7px;
+}
+
  h3 {
     margin: 0px 0px 0px 0px;
     padding: 0;
