@@ -122,8 +122,13 @@ article.room header.room header.room_name h1 {
     padding-bottom: 5px;
 }
 
+a.temperature {
+    color: inherit; /* blue colors for links too */
+    text-decoration: inherit; /* no underline */
+  }
 
-article.room header.room article.temperature {
+
+article.temperature {
     grid-column-start: 5;
     grid-column-end: 11;
     grid-row-start: 1;
@@ -138,7 +143,8 @@ article.room header.room article.temperature {
     width: 70%;
 }
 
-article.room article.temperature p.measured {
+
+article.temperature p.measured {
     font-size: xx-large;
     font-family: sans-serif;
     font-weight: bold;
@@ -147,14 +153,14 @@ article.room article.temperature p.measured {
     margin: 0px 0px 0px 0px;
 }
 
-article.room article.temperature p.setpoint {
+article.temperature p.setpoint {
     font-size: large;
     font-family: sans-serif;
     color: forestgreen;
     margin: 0px 0px 0px 0;
 }
 
-article.room article.temperature p.power_request {
+article.temperature p.power_request {
     font-size: x-large;
     font-family: sans-serif;
     color: #999999;
@@ -201,6 +207,11 @@ img.state_icon {
 }
 
 img.schedule_plot {
+    width: 100%;
+}
+
+
+img.plot{
     width: 100%;
 }
 

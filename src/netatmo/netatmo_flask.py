@@ -1,11 +1,13 @@
 import sys, os
 if __name__ == "__main__":
     sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+import datetime
 
 from flask import Flask, redirect, request, render_template
 
 from netatmo.netatmo_api.netatmo_api import NetatmoApi
 from netatmo.dataModel.netatmo_data import NetatmoData
+from netatmo.dataModel.rooms import Rooms
 
 
 app = Flask("Netatmo", 
@@ -33,6 +35,11 @@ def token():
     code  = request.args.get('code', None)
     netatmo_api.new_token(code)
     return redirect('/home/')
+
+
+@app.route("/plot/room/<string:room_id>/<int:days>")
+def plot(room_id, days):
+    return render_template('plot.j2', data=Rooms.get_plot_from_date(room_id, days=days))
     
 
 if __name__ == "__main__":

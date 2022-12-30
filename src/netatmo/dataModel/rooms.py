@@ -2,6 +2,10 @@ import os
 import datetime
 import pandas as pd
 import numpy as np
+import base64
+from io import BytesIO
+from matplotlib.figure import Figure
+
 from dataModel.items import Items, Item
 
     
@@ -39,8 +43,7 @@ class Room(Item):
                   'type':type,
                   # 'date_end':self.id,
                   # 'limit':1024,
-                  'optimize':'false',
-                  'real_time':'true'
+                  'optimize':'false'
                 }
         try:
             header.update({'date_begin':(int(from_time.timestamp()) + 1)})
@@ -97,42 +100,123 @@ class Room(Item):
         
 class Rooms(Items):
     Item_Obj = Room
-    data_path =  os.path.join(os.path.dirname(__file__), r"temperature_data.csv")
-    
+    _data_path =  os.path.join(os.path.dirname(__file__), r"temperature_data.csv")
+    _timeseries_df = pd.DataFrame()
+    _timeseries_types = ['temperature', 'sp_temperature']
     
     def add_home_id(self, home_id):
         for room_id in self.items:
             self.items[room_id].home_id = home_id
-    
-    
-    def get_timeseries_data(self):
-        self.temperatures_df = self._load_temperatures_from_file()
-        self.temperatures_df['datetime'] = pd.to_datetime(self.temperatures_df['datetime'])
-        types = ['temperature', 'sp_temperature']
-        for type in types:
-            self._load_new_timeseries_data_for_type(type) 
-        self.temperatures_df.drop_duplicates(inplace=True)
-        self.temperatures_df.to_csv(self.data_path, index=False)     
-        return self.temperatures_df
             
             
-    def _load_new_timeseries_data_for_type(self, type):
-        for room_id in self.items:
-            from_date = self._get_latest_value_date(room_id, type)
-            if (datetime.datetime.now() - from_date) > datetime.timedelta(minutes=30):
-                data_df = self.items[room_id].load_room_timeseries_data(type, from_date)
-                self.temperatures_df = pd.concat([self.temperatures_df, data_df])
+    @classmethod
+    def get_timeseries(cls, from_date : datetime.datetime):
+        cls._add_timeseries_data_all()
+        cls._save_timeseries_data()
+        if from_date:
+            return cls._timeseries_df.loc[cls._timeseries_df['datime'] > from_date].copy()
+        return cls._timeseries_df.copy()
+    
+    
+    @classmethod
+    def get_timeseries_for_room_id(cls, room_id : int, from_date : datetime.datetime = None):
+        cls._add_timeseries_data_for_room_id(room_id)
+        cls._save_timeseries_data()
+        if from_date:
+            return cls._timeseries_df.loc[(cls._timeseries_df['room_id'] == int(room_id)) & (cls._timeseries_df['datetime'] > from_date)].copy()
+        return cls._timeseries_df.loc[cls._timeseries_df['room_id'] == room_id].copy()
+            
+
+    @classmethod
+    def _save_timeseries_data(cls):
+        cls._timeseries_df.drop_duplicates(inplace=True)
+        cls._timeseries_df.to_csv(cls._data_path)
         
+        
+    @classmethod
+    def _check_timeseries_data(cls):
+        if cls._timeseries_df.empty:
+            cls._load_temperatures_from_file()
             
-    def _load_temperatures_from_file(self):
+    
+    @classmethod
+    def _load_temperatures_from_file(cls):
         try:
-            return pd.read_csv(self.data_path)
+            cls._timeseries_df = pd.read_csv(cls._data_path)
         except FileNotFoundError:
-            return pd.DataFrame({'room_id':[], 'type':[], 'datetime':[], 'value':[]})
+            cls._timeseries_df = pd.DataFrame({'room_id':[], 'type':[], 'datetime':[], 'value':[]})
+        cls._timeseries_df['datetime'] = pd.to_datetime(cls._timeseries_df['datetime'])
+        
+    
+    @classmethod
+    def _add_new_timeseries_data(cls, new_data_df : pd.DataFrame):
+        cls._check_timeseries_data()
+        cls._timeseries_df = pd.concat([cls._timeseries_df, new_data_df])
+            
+    
+    @classmethod
+    def _add_timeseries_data_all(cls):
+        for room_id in cls.items:
+            cls._add_timeseries_data_for_room_id(room_id)
+    
+    
+    @classmethod
+    def _add_timeseries_data_for_room_id(cls, room_id):
+        for type in cls._timeseries_types:
+            new_data_df = cls._load_new_timeseries_data_for_type(room_id, type)
+            cls._add_new_timeseries_data(new_data_df)
+
+    
+    @classmethod
+    def _load_new_timeseries_data_for_type(cls, room_id, type):
+        from_date = cls._get_latest_value_date(room_id, type)
+        if (datetime.datetime.now() - from_date) > datetime.timedelta(minutes=30):
+            return cls.items[room_id].load_room_timeseries_data(type, from_date)
         
         
-    def _get_latest_value_date(self, room_id, type) -> datetime.datetime:
-        filt = (self.temperatures_df['room_id'] == int(room_id)) & (self.temperatures_df['type'] == type)
-        return self.temperatures_df.loc[filt, 'datetime'].max()
+    @classmethod
+    def _get_latest_value_date(cls, room_id, type) -> datetime.datetime:
+        cls._check_timeseries_data()
+        filt = (cls._timeseries_df['room_id'] == int(room_id)) & (cls._timeseries_df['type'] == type)
+        return cls._timeseries_df.loc[filt, 'datetime'].max()
         
         
+    @classmethod
+    def get_plot_from_date(cls, room_id, from_date : datetime.datetime = None, days = None):
+        if days:
+            from_date = datetime.datetime.combine((datetime.datetime.now() - datetime.timedelta(days=7)).date(), datetime.time.min)
+        data_df = cls.get_timeseries_for_room_id(room_id, from_date)
+        data_df['days'] = (data_df['datetime'].dt.to_pydatetime() - datetime.datetime.min).astype('timedelta64[D]').astype(int)
+        data_df.set_index('datetime', drop=False, inplace=True)
+        data_df.sort_index(inplace=True)
+        days_to_display = (datetime.datetime.now() - from_date).days + 1
+        # Generate the figure **without using pyplot**.,
+        fig = Figure()
+        fig.set_size_inches(10, days_to_display * 3)
+        fig.tight_layout()
+        fig.subplots_adjust(hspace=0.3, top=0.98, bottom=0.02)
+        axs = fig.subplots(days_to_display,1)
+        ax_idx = days_to_display - 1
+        for _, day_data_df in data_df.groupby('days'):
+            day_data_df.index = day_data_df['datetime'].dt.hour + day_data_df['datetime'].dt.minute / 60
+            axs[ax_idx].plot(day_data_df.loc[day_data_df['type'] == 'temperature', ['value']],
+                                linewidth=2)
+            axs[ax_idx].plot(day_data_df.loc[day_data_df['type'] == 'sp_temperature', ['value']],
+                                drawstyle="steps-post",
+                                linewidth=2)
+            axs[ax_idx].set_title(day_data_df['datetime'].dt.to_pydatetime().min().strftime("%A %d.%m.%Y"))
+            axs[ax_idx].title.set_fontsize(18)
+            axs[ax_idx].set_xlim([0,24])
+            axs[ax_idx].xaxis.set_tick_params(labelsize=15)
+            axs[ax_idx].set_xticks(range(0,25))
+            axs[ax_idx].set_ylim([day_data_df['value'].min() - 1, day_data_df['value'].max() + 1])
+            axs[ax_idx].set_yticks(np.arange(day_data_df['value'].min() // 1, day_data_df['value'].max() + 1, 1.0))
+            axs[ax_idx].yaxis.set_tick_params(labelsize=15)
+            axs[ax_idx].grid()
+            ax_idx -= 1
+        # Save it to a temporary buffer.
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
+        # Embed the result in the html output.
+        data = base64.b64encode(buf.getbuffer()).decode("ascii")
+        return f"data:image/png;base64,{data}"
