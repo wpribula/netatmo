@@ -40,7 +40,7 @@ def token():
 @app.route("/plot/room/<string:plot_type>/<string:room_id>/<int:days>")
 def plot(plot_type, room_id, days):
     data.load_data(netatmo_api)
-    return render_template('plot.j2', data=Rooms.get_plot_from_date(room_id, days=days, cumulative=(plot_type=='cumulative')))
+    return render_template('plot.j2', data=Rooms.get_plot(room_id, days=days, plot_type=plot_type))
 
 
 if __name__ == "__main__":

@@ -192,36 +192,32 @@ class Rooms(Items):
         cls._check_timeseries_data()
         filt = (cls._timeseries_df['room_id'] == int(room_id)) & (cls._timeseries_df['type'] == type)
         return cls._timeseries_df.loc[filt, 'datetime'].max()
-        
-        
+           
+    
     @classmethod
-    def get_plot_from_date(cls, room_id, from_date : datetime.datetime = None, days = None, cumulative : bool = False):
+    def get_plot(cls, room_id, from_date : datetime.datetime = None, days = None, plot_type : str = ''):
         if days:
             from_date = datetime.datetime.combine((datetime.datetime.now() - datetime.timedelta(days=days)).date(), datetime.time.min)
         data_df = cls.get_timeseries_for_room_id(room_id, from_date)
         data_df['days'] = (data_df['datetime'].dt.to_pydatetime() - datetime.datetime.min).astype('timedelta64[D]').astype(int)
-        data_df.set_index('datetime', drop=False, inplace=True)
+        data_df['hour'] = data_df['datetime'].dt.hour + data_df['datetime'].dt.minute / 60
+        data_df.set_index('hour', inplace=True)
         data_df.sort_index(inplace=True)
-        if cumulative:
-            days_to_display = 1 
+        if plot_type == 'cumulative':
+            return cls._get_cumulative_plot(data_df, room_id)
         else:
-            days_to_display = (datetime.datetime.now() - from_date).days + 1 
-        # Generate the figure **without using pyplot**.,
+            return cls._get_day_by_day_plot(data_df, from_date, room_id)
+
+        
+    @classmethod
+    def _get_cumulative_plot(cls, data_df : pd.DataFrame, room_id):
         fig = Figure()
-        fig.set_size_inches(10, (days_to_display + int(cumulative)) * 3)
+        fig.set_size_inches(20, 10)
         fig.tight_layout()
-        if cumulative:
-            fig.subplots_adjust(top=0.9, bottom=0.1)
-        else:
-            fig.subplots_adjust(hspace=0.3, top=0.98, bottom=0.02)
-        axs = fig.subplots(days_to_display,1)
-        ax_idx = days_to_display - 1
-        for _, day_data_df in data_df.groupby('days'):
-            if cumulative:
-                axs = cls._generate_axs(axs, day_data_df, room_id, cumulative)
-            else:
-                axs[ax_idx] = cls._generate_axs(axs[ax_idx], day_data_df, room_id, cumulative)
-                ax_idx -= 1
+        fig.subplots_adjust(top=0.95, bottom=0.05)
+        axs = fig.subplots(1, 1)
+        axs = cls.add_cumulative_axe(axs, data_df, room_id)
+        axs = cls.configure_cumulative_axe(axs, data_df)
         # Save it to a temporary buffer.
         buf = BytesIO()
         fig.savefig(buf, format="png")
@@ -231,32 +227,83 @@ class Rooms(Items):
     
     
     @classmethod
-    def _generate_axs(cls, axs, day_data_df, room_id, cumulative):
-        week_day = day_data_df['datetime'].min().weekday() + 1
-        day_data_df.index = day_data_df['datetime'].dt.hour + day_data_df['datetime'].dt.minute / 60
-        axs.plot(day_data_df.loc[day_data_df['type'] == 'temperature', ['value']],
-                 color='green',
-                 linewidth=0.5)
-        if not cumulative:
-            axs.plot(day_data_df.loc[day_data_df['type'] == 'sp_temperature', ['value']],
-                    color='red',
-                    drawstyle="steps-post",
-                    linewidth=2)
-        axs.plot(cls.items[room_id].get_schedule_data_for_day(week_day),
-                 color='blue',
-                 drawstyle="steps-post",
-                 linewidth=2)
-        if cumulative:
-            axs.set_title("Cumulative")
-        else:
-            axs.set_title(day_data_df['datetime'].dt.to_pydatetime().min().strftime("%A %d.%m.%Y"))
-        axs.title.set_fontsize(18)
+    def add_cumulative_axe(cls, axs, data_df : pd.DataFrame, 
+                            room_id, color="limegreen", avg_color="green", schedule_color="blue"):
+        for _, day_data_df in data_df.groupby('days'):
+            week_day = day_data_df['datetime'].min().weekday() + 1
+            axs.plot(day_data_df.loc[day_data_df['type'] == 'temperature', ['value']],
+                    color=color,
+                    linewidth=0.5)
+            axs.plot(cls.items[room_id].get_schedule_data_for_day(week_day),
+                     color=schedule_color,
+                     drawstyle="steps-post",
+                     linewidth=4)
+        axs.plot(cls._get_average_for_days(data_df),
+                 color=avg_color,
+                 linewidth=4)
+        return axs
+    
+    
+    @classmethod
+    def _get_average_for_days(self, data_df : pd.DataFrame) -> pd.DataFrame:
+        resampled_df = data_df.loc[data_df['type'] == 'temperature', ['value', 'datetime']].copy()
+        resampled_df.set_index('datetime', inplace=True)
+        new_index = pd.date_range(resampled_df.index.min(), resampled_df.index.max(), freq='30min')
+        resampled_df = resampled_df.reindex(resampled_df.index.union(new_index)).interpolate('index').reindex(new_index)
+        resampled_df.index = resampled_df.index.hour + resampled_df.index.minute / 60
+        return resampled_df.groupby(resampled_df.index).mean()
+    
+    
+    @classmethod
+    def configure_cumulative_axe(cls, axs, data_df : pd.DataFrame):
+        axs.set_title("Cumulative")
+        axs.title.set_fontsize(28)
         axs.set_xlim([0,24])
-        axs.xaxis.set_tick_params(labelsize=15)
+        axs.xaxis.set_tick_params(labelsize=20)
         axs.set_xticks(range(0,25))
-        axs.set_ylim([day_data_df['value'].min() - 1, day_data_df['value'].max() + 1])
-        axs.set_yticks(np.arange(day_data_df['value'].min() // 1, day_data_df['value'].max() + 1, 1.0))
-        axs.yaxis.set_tick_params(labelsize=15)
+        axs.set_ylim([data_df['value'].min() - 1, data_df['value'].max() + 1])
+        axs.set_yticks(np.arange(data_df['value'].min() // 1, data_df['value'].max() + 1, 0.5))
+        axs.yaxis.set_tick_params(labelsize=20)
         axs.grid(True)
         return axs
     
+    
+    @classmethod
+    def _get_day_by_day_plot(cls, data_df : pd.DataFrame, from_date : datetime.datetime, room_id : str):
+        number_of_plots = (datetime.datetime.now() - from_date).days + 1 
+        fig = Figure()
+        fig.set_size_inches(20, (number_of_plots) * 6)
+        fig.tight_layout()
+        fig.subplots_adjust(hspace=0.2, top=0.99, bottom=0.01)
+        axs = fig.subplots(number_of_plots, 1)
+        #generate individual plots
+        ax_idx = number_of_plots - 1
+        for _, day_data_df in data_df.groupby('days'):
+            week_day = day_data_df['datetime'].min().weekday() + 1
+            axs[ax_idx].plot(day_data_df.loc[day_data_df['type'] == 'temperature', ['value']],
+                             color='green',
+                             linewidth=4)
+            axs[ax_idx].plot(day_data_df.loc[day_data_df['type'] == 'sp_temperature', ['value']],
+                             color='red',
+                             drawstyle="steps-post",
+                             linewidth=4)
+            axs[ax_idx].plot(cls.items[room_id].get_schedule_data_for_day(week_day),
+                             color='blue',
+                             drawstyle="steps-post",
+                             linewidth=4)
+            axs[ax_idx].set_title(day_data_df['datetime'].dt.to_pydatetime().min().strftime("%A %d.%m.%Y"))
+            axs[ax_idx].title.set_fontsize(28)
+            axs[ax_idx].set_xlim([0,24])
+            axs[ax_idx].xaxis.set_tick_params(labelsize=20)
+            axs[ax_idx].set_xticks(range(0,25))
+            axs[ax_idx].set_ylim([day_data_df['value'].min() - 1, day_data_df['value'].max() + 1])
+            axs[ax_idx].set_yticks(np.arange(day_data_df['value'].min() // 1, day_data_df['value'].max() + 1, 1.0))
+            axs[ax_idx].yaxis.set_tick_params(labelsize=20)
+            axs[ax_idx].grid(True)
+            ax_idx -= 1
+        # Save it to a temporary buffer.
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
+        # Embed the result in the html output.
+        data = base64.b64encode(buf.getbuffer()).decode("ascii")
+        return f"data:image/png;base64,{data}"
