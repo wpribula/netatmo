@@ -5,6 +5,7 @@ import numpy as np
 import base64
 from io import BytesIO
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 
 from netatmo.dataModel.items import Items, Item
 from netatmo.dataModel.schedules import Schedules, Schedule

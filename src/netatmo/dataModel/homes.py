@@ -3,6 +3,7 @@ import pandas as pd
 import base64
 from io import BytesIO
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 
 from netatmo.dataModel.rooms import Rooms
 from netatmo.dataModel.modules import Modules
@@ -108,12 +109,27 @@ class Home(Item):
                                            avg_color=list(colors.keys())[color_index % num_of_colors],
                                            schedule_color=list(colors.keys())[color_index % num_of_colors])
         axs = Rooms.configure_cumulative_axe(axs, data_df)
+        axs = self._add_legend_for_rooms(axs, colors)
         # Save it to a temporary buffer.
         buf = BytesIO()
         fig.savefig(buf, format="png")
         # Embed the result in the html output.
         data = base64.b64encode(buf.getbuffer()).decode("ascii")
         return f"data:image/png;base64,{data}"
+    
+    
+    def _add_legend_for_rooms(self, axs, colors):
+        names = []
+        lines = []
+        for color_idx, room_id in enumerate(self.rooms_ids):
+            names.append(Rooms.items[room_id].name)
+            lines.append(Line2D([0], [0], color=list(colors.keys())[color_idx], lw=4))
+        axs.legend(lines, 
+                   names, 
+                   loc='lower left', 
+                   prop={'size': 20})
+        return axs
+        
         
 class Homes(Items):
     Item_Obj = Home
