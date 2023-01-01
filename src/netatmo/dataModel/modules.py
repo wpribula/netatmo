@@ -1,5 +1,5 @@
 import datetime
-from dataModel.items import Items, Item
+from netatmo.dataModel.items import Items, Item
 
         
 class Module(Item):
@@ -81,9 +81,7 @@ class Module(Item):
     Boiler status: {self.boiler_status}
     Battery state: {self.battery_state}
     """
-        
-
 
 class Modules(Items):
     Item_Obj = Module
-    
+    items = {}

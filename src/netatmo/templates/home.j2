@@ -2,6 +2,13 @@
     <header>
         <h1>{{ data.homes.items[home_id].name }}</h1>
         {# <h3>{{ data.homes.items[home_id]..status }}</h3> #}
+        <div class="plots_links">
+            <a class="link_button" href="/plot/home/daily/{{ home_id }}/7">7 days</a>
+            <a class="link_button" href="/plot/home/daily/{{ home_id }}/15">15 days</a>
+            <a class="link_button" href="/plot/home/daily/{{ home_id }}/30">30 days</a>
+            <a class="link_button" href="/plot/home/cumulative/{{ home_id }}/7">7 days cumulative</a>
+            <a class="link_button" href="/plot/home/cumulative/{{ home_id }}/30">30 days cumulative</a>
+        </div>
         <table>
             <tr>
                 <td>Control mode</td>
@@ -18,8 +25,10 @@
         </table>
     </header>
     <div>
-        {% for room_id in data.homes.items[home_id].rooms_ids %}
-            {% include 'room.j2' %}
-        {% endfor %}
+        {% if not simple %}
+            {% for room_id in data.homes.items[home_id].rooms_ids %}
+                {% include 'room.j2' %}
+            {% endfor %}
+        {% endif z%}
     </div>
 </article>

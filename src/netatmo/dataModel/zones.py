@@ -1,5 +1,4 @@
-from dataModel.items import Items, Item
-from netatmo.netatmo_api.netatmo_api import NetatmoApi
+from netatmo.dataModel.items import Items, Item
 
         
 class Zone(Item):
@@ -22,4 +21,4 @@ class Zone(Item):
 
 class Zones(Items):
     Item_Obj = Zone
-    
+    items = {}

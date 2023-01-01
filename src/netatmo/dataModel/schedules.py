@@ -4,8 +4,8 @@ import base64
 from io import BytesIO
 from matplotlib.figure import Figure
 
-from dataModel.items import Items, Item
-from dataModel.zones import Zones
+from netatmo.dataModel.items import Items, Item
+from netatmo.dataModel.zones import Zones
 
         
 class Schedule(Item):
@@ -107,4 +107,6 @@ class Schedule(Item):
 
 class Schedules(Items):
     Item_Obj = Schedule
+    items = {}
+        
     

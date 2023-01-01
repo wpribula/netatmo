@@ -1,5 +1,8 @@
 import datetime
 import pandas as pd
+import base64
+from io import BytesIO
+from matplotlib.figure import Figure
 
 from netatmo.dataModel.rooms import Rooms
 from netatmo.dataModel.modules import Modules
@@ -58,33 +61,63 @@ class Home(Item):
         return [module for module in self.modules_ids.items.values() if module.room_id == room_id]
     
     
-    def get_timeseries_data(self) -> pd.DataFrame:
-        return self.rooms_ids.get_timeseries_data()
-            
-            
     def get_active_schedule(self) -> Schedule:
         for schedule_id in self.schedules_ids:
             if Schedules.items[schedule_id].active:
                 return Schedules.items[schedule_id]
             
-    
-    def __str__(self):
-        return f"""Name: {self.name}
-    Temperature control mode: {self.temperature_control_mode}
-    Therm mode: {self.therm_mode}
-    Therm setpoint default duration: {self.therm_setpoint_default_duration}
-    Status: {self.status}
-    Schedules:
-    {self.schedules_ids}
-    Modules:
-    {self.modules_ids}
-    Rooms:
-    {self.rooms_ids}
-    """
+            
+    #==========================================================================
+    #                             PLOTTING
+    #==========================================================================
+    def get_plot(self, from_date : datetime.datetime = None, days = None, plot_type : str = ''):
+        if days:
+            from_date = datetime.datetime.combine((datetime.datetime.now() - datetime.timedelta(days=days)).date(), datetime.time.min)
+        data_df = Rooms.get_timeseries(from_date)
+        data_df['days'] = (data_df['datetime'].dt.to_pydatetime() - datetime.datetime.min).astype('timedelta64[D]').astype(int)
+        data_df['hour'] = data_df['datetime'].dt.hour + data_df['datetime'].dt.minute / 60
+        data_df.set_index('hour', inplace=True)
+        data_df.sort_values('datetime')
+        if plot_type == 'cumulative':
+            return self._get_cumulative_plot(data_df)
+        # else:
+        #     return cls._get_day_by_day_plot(data_df, from_date)
         
+        
+    def _get_cumulative_plot(self, data_df : pd.DataFrame):
+        colors = {
+            'green':'limegreen',
+            'orangered':'coral',
+            'dodgerblue':'deepskyblue',
+            'darkorange':'orange',
+            'navy':'royalblue',
+            'purple':'violer',
+            'godenrod':'gold',
+            'crimson':'palevioletred'
+        }
+        num_of_colors = len(colors)
+        fig = Figure()
+        fig.set_size_inches(20, 10)
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.95, bottom=0.05)
+        axs = fig.subplots(1, 1)
+        for color_index, room_id in enumerate(self.rooms_ids):
+            room_data_df = data_df.loc[data_df['room_id'] == int(room_id)].copy()
+            axs = Rooms.add_cumulative_axe(axs, room_data_df, room_id, 
+                                           color=list(colors.values())[color_index % num_of_colors],
+                                           avg_color=list(colors.keys())[color_index % num_of_colors],
+                                           schedule_color=list(colors.keys())[color_index % num_of_colors])
+        axs = Rooms.configure_cumulative_axe(axs, data_df)
+        # Save it to a temporary buffer.
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
+        # Embed the result in the html output.
+        data = base64.b64encode(buf.getbuffer()).decode("ascii")
+        return f"data:image/png;base64,{data}"
         
 class Homes(Items):
     Item_Obj = Home
+    items = {}
     
     
     @staticmethod

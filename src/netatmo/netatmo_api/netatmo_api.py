@@ -6,21 +6,6 @@ from uuid import uuid4
 from netatmo.netatmo_api.netatmo_secrets import NetatmoSecrets
 from netatmo.netatmo_api.netatmo_tokens import NetatmoTokens
 
-
-# class Scope:
-#     read_station = 'read_station'
-#     read_thermostat = 'read_thermostat'
-#     write_thermostat = 'write_thermostat'
-#     read_camera = 'read_camera'
-#     write_camera = 'write_camera'
-#     access_camera = 'access_camera'
-#     read_presence = 'read_presence'
-#     access_presence = 'access_presence'
-#     read_smokedetector = 'read_smokedetector'
-#     read_homecoach = 'read_homecoach'
-    
-        
-
 class NetatmoApi():
     def __init__(self):
         self._guid = uuid4().hex

@@ -112,21 +112,28 @@ article.room header.room header.room_name h1 {
     width: 100%;
 }
 
-article.room a.link_button {
+a.link_button {
     text-decoration: None;
     text-transform: uppercase;
     font-weight: bold;
     font-size: smaller;
     color: white;
-    background-color: var(--third-color);
     padding: 7px 15px;
     margin: 3px;
     border-radius: 10px;
     display: inline-block;
 }
 
-article.room div.plots_links{
-    margin-top: 7px;
+div.plots_links{
+    margin: 7px 0px;
+}
+
+article.room a.link_button {
+    background-color: var(--secondary-color);
+}
+
+article.home header a.link_button {
+    background-color: var(--main-color);
 }
 
 h3 {
@@ -257,4 +264,24 @@ article.schedule header h1 {
 article.schedule header h3 {
     text-transform: uppercase;
     font-size: small;
+}
+
+
+body.plot {
+    display: inline-flex;
+}
+
+body.plot article.home{
+    width: 350px;
+}
+
+header.plot {
+    padding: 0px;
+    margin: 0px;
+}
+
+article.plot {
+    width: calc(100% - 400px);
+    padding: 0px;
+    margin: 0px;
 }

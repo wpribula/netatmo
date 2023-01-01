@@ -8,8 +8,6 @@ from netatmo.dataModel.modules import Modules
 from netatmo.dataModel.zones import Zones
 from netatmo.netatmo_api.netatmo_api import NetatmoApi
 
-
-
 class NetatmoData():
     def __init__(self):
         self.homes = Homes

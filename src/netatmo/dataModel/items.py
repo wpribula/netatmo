@@ -18,6 +18,11 @@ class Items:
     Item_Obj = Item
     items = {}
     
+    
+    @classmethod
+    def get_items(cls) -> dict:
+        return cls.items
+    
 
     @classmethod
     def add_data(cls, netatmo_api : NetatmoApi = None, data : dict = None, status_data = None):

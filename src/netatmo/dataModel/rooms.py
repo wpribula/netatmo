@@ -6,8 +6,8 @@ import base64
 from io import BytesIO
 from matplotlib.figure import Figure
 
-from dataModel.items import Items, Item
-from dataModel.schedules import Schedules, Schedule
+from netatmo.dataModel.items import Items, Item
+from netatmo.dataModel.schedules import Schedules, Schedule
 
     
 class Room(Item):
@@ -113,6 +113,7 @@ class Room(Item):
         
 class Rooms(Items):
     Item_Obj = Room
+    items = {}
     _data_path =  os.path.join(os.path.dirname(__file__), r"temperature_data.csv")
     _timeseries_df = pd.DataFrame()
     _timeseries_types = ['temperature', 'sp_temperature']
@@ -127,7 +128,7 @@ class Rooms(Items):
         cls._add_timeseries_data_all()
         cls._save_timeseries_data()
         if from_date:
-            return cls._timeseries_df.loc[cls._timeseries_df['datime'] > from_date].copy()
+            return cls._timeseries_df.loc[cls._timeseries_df['datetime'] > from_date].copy()
         return cls._timeseries_df.copy()
     
     
@@ -194,6 +195,9 @@ class Rooms(Items):
         return cls._timeseries_df.loc[filt, 'datetime'].max()
            
     
+    #==========================================================================
+    #                             PLOTTING
+    #==========================================================================
     @classmethod
     def get_plot(cls, room_id, from_date : datetime.datetime = None, days = None, plot_type : str = ''):
         if days:
@@ -202,7 +206,7 @@ class Rooms(Items):
         data_df['days'] = (data_df['datetime'].dt.to_pydatetime() - datetime.datetime.min).astype('timedelta64[D]').astype(int)
         data_df['hour'] = data_df['datetime'].dt.hour + data_df['datetime'].dt.minute / 60
         data_df.set_index('hour', inplace=True)
-        data_df.sort_index(inplace=True)
+        data_df.sort_values('datetime')
         if plot_type == 'cumulative':
             return cls._get_cumulative_plot(data_df, room_id)
         else:
@@ -228,7 +232,7 @@ class Rooms(Items):
     
     @classmethod
     def add_cumulative_axe(cls, axs, data_df : pd.DataFrame, 
-                            room_id, color="limegreen", avg_color="green", schedule_color="blue"):
+                           room_id, color="limegreen", avg_color="green", schedule_color="blue"):
         for _, day_data_df in data_df.groupby('days'):
             week_day = day_data_df['datetime'].min().weekday() + 1
             axs.plot(day_data_df.loc[day_data_df['type'] == 'temperature', ['value']],
@@ -237,7 +241,7 @@ class Rooms(Items):
             axs.plot(cls.items[room_id].get_schedule_data_for_day(week_day),
                      color=schedule_color,
                      drawstyle="steps-post",
-                     linewidth=4)
+                     linewidth=2)
         axs.plot(cls._get_average_for_days(data_df),
                  color=avg_color,
                  linewidth=4)
