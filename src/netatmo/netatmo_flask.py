@@ -60,4 +60,8 @@ def plot(item_type, plot_type, item_id, days):
 
 
 if __name__ == "__main__":
-    app.run(port=80)
+    try:
+        port = sys.argv[1]
+    except IndexError:
+        port = 80
+    app.run(port=port)
