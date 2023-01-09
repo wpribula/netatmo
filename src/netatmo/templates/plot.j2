@@ -5,14 +5,16 @@
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
     <title>Netatmo termostat - monitoring</title>
 </head>
-<body>
-    <header class="main">
-        <h1>Netatmo thermostat - monitoring</h1>
-    </header>
-    <article>
-        {% for home_id in data.homes_ids %}
+<body class="plot">
+    <header class="plot">
+        {% if item_type == 'room' %}
+            {% include 'room.j2' %}
+        {% elif item_type == 'home' %}
             {% include 'home.j2' %}
-        {% endfor %}
+        {% endif %}
+    </header>
+    <article class="plot">
+        <img src="{{ plot_data }}" title="Plot" class="plot"/>
     </article>
 </body>
 </html>

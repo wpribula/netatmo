@@ -4,8 +4,8 @@ import base64
 from io import BytesIO
 from matplotlib.figure import Figure
 
-from dataModel.items import Items, Item
-from dataModel.zones import Zones
+from netatmo.dataModel.items import Items, Item
+from netatmo.dataModel.zones import Zones
 
         
 class Schedule(Item):
@@ -20,7 +20,7 @@ class Schedule(Item):
         self.hg_temp = data['hg_temp'] if 'hg_temp' in data.keys() else None
         self.selected = data['selected'] if 'selected' in data.keys() else None
         
-        self.zones = Zones(self._netatmo_api, data['zones']) if 'zones' in data.keys() else None
+        self.zones = Zones.get_data(self._netatmo_api, data['zones']) if 'zones' in data.keys() else None
         self.time_table_df = self._process_timetable(data['timetable']) if 'timetable' in data.keys() else None
     
     
@@ -53,9 +53,9 @@ class Schedule(Item):
             
     def _add_zones_information(self):
         zones = []
-        for zone in self.zones.items.values():
-            for room_id in zone.rooms:
-                zones.append([zone.id, zone.name, room_id, zone.rooms[room_id]])
+        for zone_id in self.zones:
+            for room_id in self.zones[zone_id].rooms_setpoints:
+                zones.append([zone_id, self.zones[zone_id].name, room_id, self.zones[zone_id].rooms_setpoints[room_id]])
         self.zones_df = pd.DataFrame(zones)
         self.zones_df.columns = ['zone_id', 'zone_name', 'room_id', 'temperature']
         self.time_table_df = self.time_table_df.merge(self.zones_df, how='left', on='zone_id')
@@ -64,7 +64,7 @@ class Schedule(Item):
     #======================================================================
     #                              PLOT
     #======================================================================
-    def _get_schedule_data_for_room_and_day(self, room_id, day) -> pd.Series:
+    def get_schedule_data_for_room_and_day(self, room_id, day) -> pd.Series:
         schedule_df = self.time_table_df.loc[(self.time_table_df['room_id'] == room_id) & (self.time_table_df['day'] == day), ['time', 'temperature']].copy()
         schedule_df.set_index('time', inplace=True)
         return schedule_df['temperature']
@@ -79,7 +79,7 @@ class Schedule(Item):
         fig.subplots_adjust(hspace=0.5, top=0.98, bottom=0.02)
         axs = fig.subplots(7,1)
         for idx, ax in enumerate(axs):
-            data_s = self._get_schedule_data_for_room_and_day(room_id, idx + 1)
+            data_s = self.get_schedule_data_for_room_and_day(room_id, idx + 1)
             ax.plot(data_s,
                     drawstyle="steps-post",
                     linewidth=4)
@@ -107,6 +107,6 @@ class Schedule(Item):
 
 class Schedules(Items):
     Item_Obj = Schedule
-
-    def get_data(self):
-        pass
+    items = {}
+        
+    

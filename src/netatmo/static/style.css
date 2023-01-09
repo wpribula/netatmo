@@ -2,7 +2,7 @@
     --main-color: #006E7F;
     --secondary-color: #B22727;
     --third-color: #EE5007;
-    --fourth-color: #F8CB2E;
+    --fourth-color: #e4b717;
     --table-background: #E9E9E9;
     --table-background2: #F3F3F3;
   }
@@ -112,7 +112,31 @@ article.room header.room header.room_name h1 {
     width: 100%;
 }
 
- h3 {
+a.link_button {
+    text-decoration: None;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: smaller;
+    color: white;
+    padding: 7px 15px;
+    margin: 3px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+div.plots_links{
+    margin: 7px 0px;
+}
+
+article.room a.link_button {
+    background-color: var(--secondary-color);
+}
+
+article.home header a.link_button {
+    background-color: var(--main-color);
+}
+
+h3 {
     margin: 0px 0px 0px 0px;
     padding: 0;
     font-size: medium;
@@ -122,8 +146,13 @@ article.room header.room header.room_name h1 {
     padding-bottom: 5px;
 }
 
+a.temperature {
+    color: inherit; /* blue colors for links too */
+    text-decoration: inherit; /* no underline */
+  }
 
-article.room header.room article.temperature {
+
+article.temperature {
     grid-column-start: 5;
     grid-column-end: 11;
     grid-row-start: 1;
@@ -138,7 +167,8 @@ article.room header.room article.temperature {
     width: 70%;
 }
 
-article.room article.temperature p.measured {
+
+article.temperature p.measured {
     font-size: xx-large;
     font-family: sans-serif;
     font-weight: bold;
@@ -147,14 +177,14 @@ article.room article.temperature p.measured {
     margin: 0px 0px 0px 0px;
 }
 
-article.room article.temperature p.setpoint {
+article.temperature p.setpoint {
     font-size: large;
     font-family: sans-serif;
     color: forestgreen;
     margin: 0px 0px 0px 0;
 }
 
-article.room article.temperature p.power_request {
+article.temperature p.power_request {
     font-size: x-large;
     font-family: sans-serif;
     color: #999999;
@@ -202,4 +232,56 @@ img.state_icon {
 
 img.schedule_plot {
     width: 100%;
+}
+
+
+img.plot{
+    width: 100%;
+    /* height: 95vh; */
+}
+
+
+article.schedule {
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 10pt;
+    padding: 5px;
+    margin: 15px 5px 5px 5px;
+    border-color: var(--fourth-color);
+    text-align: center;
+    /* display: inline-block; */
+}
+
+article.schedule header h1 {
+    font-size: medium;
+    text-transform: uppercase;
+    font-family: sans-serif;
+    color: var(--fourth-color);
+    padding: 0px;
+    margin: 5px 0px 0px 0px;
+}
+
+article.schedule header h3 {
+    text-transform: uppercase;
+    font-size: small;
+}
+
+
+body.plot {
+    display: inline-flex;
+}
+
+body.plot article.home{
+    width: 350px;
+}
+
+header.plot {
+    padding: 0px;
+    margin: 0px;
+}
+
+article.plot {
+    width: calc(100% - 400px);
+    padding: 0px;
+    margin: 0px;
 }

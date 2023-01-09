@@ -2,31 +2,33 @@ import datetime
 import pandas as pd
 
 from netatmo.dataModel.homes import Homes
+from netatmo.dataModel.rooms import Rooms
+from netatmo.dataModel.schedules import Schedules
+from netatmo.dataModel.modules import Modules
+from netatmo.dataModel.zones import Zones
 from netatmo.netatmo_api.netatmo_api import NetatmoApi
-
 
 class NetatmoData():
     def __init__(self):
-        self._homes = None
+        self.homes = Homes
+        self.rooms = Rooms
+        self.schedules = Schedules
+        self.modules = Modules
+        self.zones = Zones
+        self.last_update = datetime.datetime.min
+        self.homes_ids = []
         
         
-    def get_homes_data(self, netatmo_api : NetatmoApi = None) -> Homes:
-        if not self._homes:
+    def load_data(self, netatmo_api : NetatmoApi) -> Homes:
+        if (datetime.datetime.now() - self.last_update) > datetime.timedelta(minutes=1):
             self._load_homes_data(netatmo_api)
-        self._chack_data_freshness(netatmo_api)
-        return self._homes
+        return self
     
     
-    def _load_homes_data(self, netatmo_api : NetatmoApi = None):
-        if not netatmo_api:
-            raise RuntimeError("Missing netatmo_api.")
-        self._homes = Homes(netatmo_api)
-    
-    
-    def _chack_data_freshness(self, netatmo_api : NetatmoApi = None):
-        if (datetime.datetime.now() - self._homes.last_update) > datetime.timedelta(minutes=1):
-            self._load_homes_data(netatmo_api)
-            
+    def _load_homes_data(self, netatmo_api : NetatmoApi):
+        self.homes_ids = Homes.add_data(netatmo_api)
+        self.last_update = datetime.datetime.now()
+        
             
     def get_timeseries_df(self) -> pd.DataFrame:
         data_df = pd.DataFrame
