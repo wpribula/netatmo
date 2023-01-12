@@ -1,0 +1,38 @@
+{% with data.homes.items|get_item:home_id as home%}
+<article class="home">
+    <header>
+        <h1>{{ home.name }}</h1>
+        {# <h3>{{ data.homes.items[home_id]..status }}</h3> #}
+        <div class="plots_links">
+            {% comment %} <a class="link_button" href="/plot/home/daily/{{ home_id }}/7">7 days</a>
+            <a class="link_button" href="/plot/home/daily/{{ home_id }}/15">15 days</a>
+            <a class="link_button" href="/plot/home/daily/{{ home_id }}/30">30 days</a> {% endcomment %}
+            <a class="link_button" href="/plot/home/cumulative/{{ home_id }}/7">7 days cumulative</a>
+            <a class="link_button" href="/plot/home/cumulative/{{ home_id }}/30">30 days cumulative</a>
+        </div>
+        <table>
+            <th></th>
+            <tr>
+                <td>Control mode</td>
+                <td>{{ home.temperature_control_mode }}</td>
+            </tr>
+            <tr>
+                <td>Mode</td>
+                <td>{{ home.therm_mode }}</td>
+            </tr>
+            <tr>
+                <td>Manual set point duration</td>
+                <td>{{ home.therm_setpoint_default_duration }} min</td>
+            </tr>
+        </table>
+    </header>
+    <div>
+        {% if not simple %}
+            {% for room_id in home.rooms_ids %}
+                {% include 'home/room.html' %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</article>
+{% endwith %}
+

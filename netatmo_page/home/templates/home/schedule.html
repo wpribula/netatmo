@@ -1,0 +1,34 @@
+{% load static %}
+{% with data.schedules.items|get_item:schedule_id as schedule%}
+<article class="schedule">
+    <header>
+        <h1>Schedule: {{ schedule.name }}</h1>
+        <h3>{{ schedule.type }}</h3>
+        <div class="state_icons">
+            {% if schedule.selected %} 
+                <img src="{% static 'images/reachable.png' %}" title="Schedule is selected" alt="Schedule is selected" class="state_icon"/>
+            {% elif schedule.selected is not none %} 
+                <img src="{% static 'images/unreachable.png' %}" title="Schedule is not selected" alt="Schedule is not selected" class="state_icon"/>
+            {% endif %} 
+        </div>
+    </header>
+    <article>
+        <table>
+            <th></th>
+            {% if schedule.hg_temp is not none %} 
+            <tr>
+                <td>Frost guard temperature</td>
+                <td>{{ schedule.hg_temp }} &degC</td>
+            </tr>
+            {% endif %}
+            {% if schedule.away_temp is not none %} 
+            <tr>
+                <td>Away temperature</td>
+                <td>{{ schedule.away_temp }} &degC</td>
+            </tr>
+            {% endif %}
+        </table>
+        {% comment %} <img src="{{ schedule.get_schedule_plot(room_id) }}" title="Schedule plot" class="schedule_plot"/> {% endcomment %}
+    </article>
+</article>
+{% endwith %}

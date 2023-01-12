@@ -1,0 +1,36 @@
+{% with data.rooms.items|get_item:room_id as room%}
+<article class="room">
+    <header class="room">
+        <header class="room_name">
+            <h1>{{ room.name }}</h1>
+            <h3>{{ room.type }}</h3>
+            <p>Mode: {{ room.therm_setpoint_mode }}</p>
+            <p>Point: {{ room.therm_setpoint_fp }}</p>
+        </header>
+        <article class="temperature">
+            <a class="temperature" href="/plot/room/{{ room_id }}/7">
+                <p class="power_request">{{ room.heating_power_request }}%</p>
+                <p class="measured">{{ room.therm_measured_temperature }} &degC</p>
+                <p class="setpoint">{{ room.therm_setpoint_temperature }} &degC
+            </a>
+        </article>
+    </header>
+    <div class="plots_links">
+        <a class="link_button" href="/plot/room/daily/{{ room_id }}/7">7 days</a>
+        <a class="link_button" href="/plot/room/daily/{{ room_id }}/15">15 days</a>
+        <a class="link_button" href="/plot/room/daily/{{ room_id }}/30">30 days</a>
+        <a class="link_button" href="/plot/room/cumulative/{{ room_id }}/7">7 days cumulative</a>
+        <a class="link_button" href="/plot/room/cumulative/{{ room_id }}/30">30 days cumulative</a>
+    </div>
+    {% for module_id in room.modules_ids %}
+        {% include 'home/module.html' %}
+    {% endfor %}
+    {% if not simple %}
+        {% for schedule_id in home.schedules_ids %}
+            {% include 'home/schedule.html' %}
+        {% endfor %}
+    {% endif %}
+</article>
+{% endwith %}
+
+
