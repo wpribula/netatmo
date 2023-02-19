@@ -127,7 +127,7 @@ class Home(Item):
 
 class Homes(Items):
     Item_Obj = Home
-    items = {}
+    items : dict[str, Home] = {}
 
     @staticmethod
     def _get_data(data: dict = None, netatmo_api: NetatmoApi = None):

@@ -4,29 +4,29 @@
         <h3>{{ data.modules.items[module_id].type }}</h3>
         <div class="state_icons">
             {% if data.modules.items[module_id].reachable %} 
-                <img src="{{ url_for('static', filename='images/reachable.png') }}"" title="Module is reachable" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/reachable.png') }}" title="Module is reachable" class="state_icon"/>
             {% elif data.modules.items[module_id].reachable is not none %} 
-                <img src="{{ url_for('static', filename='images/unreachable.png') }}"" title="Module is unreachable" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/unreachable.png') }}" title="Module is unreachable" class="state_icon"/>
             {% endif %}   
             {% if data.modules.items[module_id].battery_state == data.modules.items[module_id].battery_states[4] %} 
-                <img src="{{ url_for('static', filename='images/battery_full.png') }}"" title="Battery full" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/battery_full.png') }}" title="Battery full" class="state_icon"/>
             {% elif data.modules.items[module_id].battery_state == data.modules.items[module_id].battery_states[3] %} 
-                <img src="{{ url_for('static', filename='images/battery_high.png') }}"" title="Battery high" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/battery_high.png') }}" title="Battery high" class="state_icon"/>
             {% elif data.modules.items[module_id].battery_state == data.modules.items[module_id].battery_states[2] %} 
-                <img src="{{ url_for('static', filename='images/battery_medium.png') }}"" title="Battery medium" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/battery_medium.png') }}" title="Battery medium" class="state_icon"/>
             {% elif data.modules.items[module_id].battery_state == data.modules.items[module_id].battery_states[1] %} 
-                <img src="{{ url_for('static', filename='images/battery_low.png') }}"" title="Battery low" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/battery_low.png') }}" title="Battery low" class="state_icon"/>
             {% elif data.modules.items[module_id].battery_state == data.modules.items[module_id].battery_states[0] %} 
-                <img src="{{ url_for('static', filename='images/battery_very_low.png') }}"" title="Battery very low" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/battery_very_low.png') }}" title="Battery very low" class="state_icon"/>
             {% endif %}     
             {% if data.modules.items[module_id].boiler_status %} 
-                <img src="{{ url_for('static', filename='images/boiler_on.png') }}"" title="Boiler ON" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/boiler_on.png') }}" title="Boiler ON" class="state_icon"/>
             {% endif %}     
             {% if data.modules.items[module_id].boiler_valve_comfort_boost %} 
-                <img src="{{ url_for('static', filename='images/valve_boost.png') }}"" title="Comfort boost ON" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/valve_boost.png') }}" title="Comfort boost ON" class="state_icon"/>
             {% endif %}    
             {% if data.modules.items[module_id].boiler_error %} 
-                <img src="{{ url_for('static', filename='images/error.png') }}"" title="Boiler error" class="state_icon"/>
+                <img src="{{ url_for('static', filename='images/error.png') }}" title="Boiler error" class="state_icon"/>
             {% endif %}     
         </div>
     </header>

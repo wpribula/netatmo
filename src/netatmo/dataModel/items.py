@@ -16,7 +16,7 @@ class Item:
 
 class Items:
     Item_Obj = Item
-    items = {}
+    items : dict[str, Item]= {}
     
     
     @classmethod

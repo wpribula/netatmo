@@ -9,12 +9,16 @@
 
 body {
     font-family: sans-serif;
+    text-align: center;
 }
 
 header.main h1 {
     text-align: center;
     text-transform: uppercase;
-    text-shadow: var(--fourth-color) 0px 0px 5px;
+}
+
+article.main{
+    text-align: center;
 }
 
 article.home {
@@ -22,7 +26,7 @@ article.home {
     border-style: solid;
     border-radius: 10pt;
     padding: 5px;
-    margin: 5px;;
+    margin: auto;
     border-color: var(--main-color);
     text-align: center;
     width: fit-content;
@@ -124,6 +128,24 @@ a.link_button {
     display: inline-block;
 }
 
+a.home_button {
+    text-decoration: None;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: small;
+    color: white;
+    background-color: #777777;
+    padding: 20px 40px;
+    margin: 3px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+a:hover {
+    background-color: #AAAAAA;
+}
+
+
 div.plots_links{
     margin: 7px 0px;
 }
@@ -132,8 +154,16 @@ article.room a.link_button {
     background-color: var(--secondary-color);
 }
 
+article.room a.link_button:hover {
+    background-color: #AAAAAA;
+}
+
 article.home header a.link_button {
     background-color: var(--main-color);
+}
+
+article.home header a.link_button:hover {
+    background-color: #AAAAAA;
 }
 
 h3 {

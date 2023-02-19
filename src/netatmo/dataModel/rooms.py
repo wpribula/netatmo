@@ -107,7 +107,7 @@ class Room(Item):
 
 class Rooms(Items):
     Item_Obj = Room
-    items = {}
+    items : dict[str, Room] = {}
     _data_path = os.path.join(os.path.dirname(
         __file__), r"temperature_data.csv")
     _time_series_df = pd.DataFrame()
@@ -129,17 +129,19 @@ class Rooms(Items):
 
 
     @classmethod
-    def get_time_series_for_room_id(cls, room_id: int, from_date: datetime.datetime = None):
+    def get_time_series_for_room_id(cls, room_id: str, from_date: datetime.datetime = None):
         cls._add_time_series_data_for_room_id(room_id)
         cls._save_time_series_data()
         if from_date:
-            return cls._time_series_df.loc[(cls._time_series_df['room_id'] == int(room_id)) & (cls._time_series_df['datetime'] > from_date)].copy()
+            return cls._time_series_df.loc[(cls._time_series_df['room_id'] == str(room_id)) & (cls._time_series_df['datetime'] > from_date)].copy()
         return cls._time_series_df.loc[cls._time_series_df['room_id'] == room_id].copy()
 
 
     @classmethod
     def _save_time_series_data(cls):
         cls._time_series_df.drop_duplicates(inplace=True)
+        cls._time_series_df.dropna(inplace=True)
+        cls._time_series_df['room_id'] = cls._time_series_df['room_id'].astype(str)
         cls._time_series_df.to_csv(cls._data_path, index=False)
 
 
@@ -201,15 +203,13 @@ class Rooms(Items):
     # ==========================================================================
     #                             PLOTTING
     # ==========================================================================
-
     @classmethod
     def get_plot(cls, room_id, from_date: datetime.datetime = None, days=None, plot_type: str = ''):
         if days:
             from_date = datetime.datetime.combine((datetime.datetime.now(
             ) - datetime.timedelta(days=days)).date(), datetime.time.min)
         data_df = cls.get_time_series_for_room_id(room_id, from_date)
-        data_df['days'] = (data_df['datetime'].dt.to_pydatetime(
-        ) - datetime.datetime.min).astype('timedelta64[D]').astype(int)
+        data_df['days'] = (data_df['datetime'].dt.to_pydatetime() - datetime.datetime.min).astype('timedelta64[D]').astype(int)
         data_df['hour'] = data_df['datetime'].dt.hour + \
             data_df['datetime'].dt.minute / 60
         data_df.set_index('hour', inplace=True)
@@ -251,7 +251,8 @@ class Rooms(Items):
                      linewidth=2)
         axs.plot(cls._get_average_for_days(data_df),
                  color=avg_color,
-                 linewidth=4)
+                 linewidth=4,
+                 label=cls.items[room_id].name)
         return axs
 
 
@@ -279,7 +280,9 @@ class Rooms(Items):
         axs.set_yticks(
             np.arange(data_df['value'].min() // 1, data_df['value'].max() + 1, 0.5))
         axs.yaxis.set_tick_params(labelsize=20)
+        axs.legend()
         axs.grid(True)
+        
         return axs
 
 
@@ -297,15 +300,18 @@ class Rooms(Items):
             week_day = day_data_df['datetime'].min().weekday() + 1
             axs[ax_idx].plot(day_data_df.loc[day_data_df['type'] == 'temperature', ['value']],
                              color='green',
-                             linewidth=4)
+                             linewidth=4,
+                             label='Temperature')
             axs[ax_idx].plot(day_data_df.loc[day_data_df['type'] == 'sp_temperature', ['value']],
                              color='red',
                              drawstyle="steps-post",
-                             linewidth=4)
+                             linewidth=4,
+                             label='Set point')
             axs[ax_idx].plot(cls.items[room_id].get_schedule_data_for_day(week_day),
                              color='blue',
                              drawstyle="steps-post",
-                             linewidth=4)
+                             linewidth=4,
+                             label='Scheduled')
             axs[ax_idx].set_title(
                 day_data_df['datetime'].dt.to_pydatetime().min().strftime("%A %d.%m.%Y"))
             axs[ax_idx].title.set_fontsize(28)
@@ -318,6 +324,7 @@ class Rooms(Items):
                 day_data_df['value'].min() // 1, day_data_df['value'].max() + 1, 1.0))
             axs[ax_idx].yaxis.set_tick_params(labelsize=20)
             axs[ax_idx].grid(True)
+            axs[ax_idx].legend()
             ax_idx -= 1
         # Save it to a temporary buffer.
         buf = BytesIO()
