@@ -128,21 +128,23 @@ a.link_button {
     display: inline-block;
 }
 
+
 a.home_button {
     text-decoration: None;
     text-transform: uppercase;
+    text-align: center;
     font-weight: bold;
     font-size: small;
-    color: white;
-    background-color: #777777;
-    padding: 20px 40px;
-    margin: 3px;
-    border-radius: 10px;
+    color: #777777;
+    padding: 10px 30px;
+    margin: 0px 3px;
     display: inline-block;
 }
 
 a:hover {
-    background-color: #AAAAAA;
+    color: white;
+    background-color: #777777;
+    border-radius: 10px;
 }
 
 
@@ -305,7 +307,13 @@ body.plot article.home{
     width: 350px;
 }
 
+header.home {
+    text-align: left;
+    width: auto;
+}
+
 header.plot {
+    vertical-align: left;
     padding: 0px;
     margin: 0px;
 }
