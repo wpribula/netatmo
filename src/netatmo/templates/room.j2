@@ -7,7 +7,7 @@
             <p>Point: {{ data.rooms.items[room_id].therm_setpoint_fp }}</p>
         </header>
         <article class="temperature">
-            <a class="temperature" href="/plot/room/{{ room_id }}/7">
+            <a class="temperature" href="/plot/room/daily/{{ room_id }}/7">
                 <p class="power_request">{{ data.rooms.items[room_id].heating_power_request }}%</p>
                 <p class="measured">{{ data.rooms.items[room_id].therm_measured_temperature }} &degC</p>
                 <p class="setpoint">{{ data.rooms.items[room_id].therm_setpoint_temperature }} &degC

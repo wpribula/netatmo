@@ -58,6 +58,13 @@ def plot(item_type, plot_type, item_id, days):
                                data = data.load_data(netatmo_api),
                                plot_data=Homes.items[item_id].get_plot(days=days, plot_type=plot_type))
 
+def main():
+    try:
+        port = sys.argv[1]
+    except IndexError:
+        port = 80
+    app.run(port=port)
+
 
 if __name__ == "__main__":
-    app.run(port=80)
+    main()
