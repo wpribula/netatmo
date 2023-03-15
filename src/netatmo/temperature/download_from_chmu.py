@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 class Temperature:
     def __init__(self, stanice : str):
-        # self.url = f"https://www.chmi.cz/files/portal/docs/meteo/ok/denni_data/Denni_data_ze_stanic/files/{stanice}.xlsx"
+        # self.url = f" "
         self.url = "F:\Downloads\O1MOSN01.xlsx"
         self._read_temperature()
         
