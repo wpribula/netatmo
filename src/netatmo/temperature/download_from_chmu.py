@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import requests
 import re
+import pytz
+from time import sleep, tzname
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 
@@ -43,39 +45,6 @@ from bs4 import BeautifulSoup
 #         return new_links
     
     
-class ChmiStations:
-    def __init__(self):
-        self._url = r"https://www.chmi.cz/files/portal/docs/meteo/opss/pocasicko_nove/st_zemepis_cz.html"
-        self._base_url = r"https://www.chmi.cz"
-        self.stations = {}
-        self._load_stations()
-    
-    
-    def _load_stations(self) -> list[BeautifulSoup]:
-        rows = self._load_rows()
-        links = {}
-        for row in rows:
-            attributes = self._parse_row(row)
-            self.stations.update({attributes['name']:Station(attributes)})
-        return links
-    
-        
-    def _load_rows(self) -> list[BeautifulSoup]:
-        html = requests.get(self._url).content
-        soup = BeautifulSoup(html, 'html.parser')
-        return soup.find_all(name='tr', attrs={'class':'nezvyraznit'})
-        
-        
-    def _parse_row(self, row : BeautifulSoup) -> dict:
-        cels = row.find_all(name='td')
-        return {
-            'name':cels[0].text,
-            'base_url':self._base_url,
-            'url':cels[1].next.attrs['href'],
-            'latitude':float(cels[2].text[:-1].replace(',','.')),
-            'longitude':float(cels[4].text[:-1].replace(',','.')),
-            'height':float(cels[6].text.replace(',','.'))
-        }
         
     
 
@@ -129,24 +98,170 @@ class Station:
         cells = row.find_all(name='td')
         values = []
         for i, cell in enumerate(cells[2:]):
-            values.append(self._parse_value_cell(cell.text, i))
+            values.append(self._parse_cell(cell.text, i))
         data_df = pd.DataFrame(values)
         data_df['value_name'] = cells[0].text
         self.data_df = pd.concat([self.data_df, data_df])
             
             
+    def _parse_cell(self, cell : str, hour : int) -> dict:
+        if cell[0] in '0123456789':
+            self._parse_value_cell(cell, hour)
+        else:
+            self._parse_text_cell(cell, hour)
+        
     def _parse_value_cell(self, cell : str, hour : int) -> dict:
-        values = cell.replace(',','.').split(' ')
         return {
             'timestamp' : self.current_time - timedelta(hours=hour),
-            'value' : float(values[0]),
-            'uom' : values[1]
+            'value' : cell,
+            'uom' : ''
         }
-        
+    
             
         
+class ChmiStations:
+    def __init__(self):
+        self._url = r"https://www.chmi.cz/files/portal/docs/meteo/opss/pocasicko_nove/st_zemepis_cz.html"
+        self._base_url = r"https://www.chmi.cz"
+        self.stations = {}
+        self._load_stations()
+    
+    
+    def _load_stations(self) -> dict[str, Station]:
+        rows = self._load_rows()
+        links = {}
+        for row in rows:
+            attributes = self._parse_row(row)
+            self.stations.update({attributes['name']:Station(attributes)})
+            sleep(100)
+        return links
+    
+        
+    def _load_rows(self) -> list[BeautifulSoup]:
+        html = requests.get(self._url).content
+        soup = BeautifulSoup(html, 'html.parser')
+        return soup.find_all(name='tr', attrs={'class':'nezvyraznit'})
         
         
+    def _parse_row(self, row : BeautifulSoup) -> dict:
+        cells = row.find_all(name='td')
+        return {
+            'name':cells[0].text,
+            'base_url':self._base_url,
+            'url':cells[1].next.attrs['href'],
+            'latitude':float(cells[2].text[:-1].replace(',','.')),
+            'longitude':float(cells[4].text[:-1].replace(',','.')),
+            'height':float(cells[6].text.replace(',','.'))
+        }
+        
+        
+class DataTable:
+    def __init__(self, file : str, hourly_value_columns : list[int] = [], daily_value_columns : list[int] = [], daily_text_column : list[int] = []):
+        self._url = r"https://www.chmi.cz/files/portal/docs/meteo/opss/pocasicko_nove/" + file
+        self._hourly_value_columns = hourly_value_columns
+        self._daily_value_columns = daily_value_columns
+        self._daily_text_column = daily_text_column
+        self._load_data()
+        
+    def _load_data(self):
+        html = requests.get(self._url).content
+        tables = pd.read_html(self._url)
+        self._parse_hourly_time(tables[0])
+        self._parse_daily_time(tables[0])
+        self._parse_data(tables[1])
+        self._parse_daily_data(tables[2])
+        
+        
+    def _parse_hourly_time(self, table : BeautifulSoup) -> dict:
+        time_str = table.at[1, 0]
+        time_str = re.findall("^(\d+. \d+. \d+ \d+:\d+) .*", time_str)[0]
+        timestamp = datetime.strptime(time_str, "%d. %m. %Y %H:%M")
+        timestamp = pytz.timezone('CET').localize(timestamp)
+        self.current_timestamp = timestamp
+        
+        
+    def _parse_daily_time(self, table : BeautifulSoup) -> dict:
+        try:
+            time_str = table.at[3, 0]
+        except KeyError:
+            self.current_daily_timestamp = pd.NaT
+            return
+        time_str = re.findall("^od (\d+. \d+. \d+ \d+:\d+) .*", time_str)[0]
+        timestamp = datetime.strptime(time_str, "%d. %m. %Y %H:%M")
+        timestamp = pytz.timezone('CET').localize(timestamp)
+        self.current_daily_timestamp = timestamp
+
+
+    def _parse_data(self, table_df : pd.DataFrame) -> dict:
+        table_df = self._parse_column_names(table_df)
+        self._data_df = pd.DataFrame()
+        self._data_df = pd.concat([self._data_df, self._parse_columns(table_df, table_df.columns[self._hourly_value_columns], self.current_timestamp)])
+        self._data_df = pd.concat([self._parse_columns(table_df, table_df.columns[self._daily_value_columns], self.current_daily_timestamp)])
+        self._data_df = pd.concat([self._parse_columns(table_df, table_df.columns[self._daily_text_column], self.current_timestamp, is_text = True)])
+        i = 1
+        
+        
+    def _parse_columns(self, table_df : pd.DataFrame, columns : tuple, timestamp : datetime, is_text : bool = False) -> pd.DataFrame:
+        try:
+            table_df = self._melt_data(table_df, columns, is_text)
+            table_df['timestamp'] = timestamp
+            return table_df
+        except ValueError:
+            return pd.DataFrame()
+            
+    def _parse_column_names(self, table_df : pd.DataFrame) -> pd.DataFrame:
+        table_df.drop(columns=[1], inplace=True)
+        table_df.columns = table_df.loc[0]
+        return table_df.drop(index=[0])
+        
+        
+    def _melt_data(self, table_df : pd.DataFrame, columns : tuple, is_text : bool = False) -> pd.DataFrame:    
+        table_df = table_df.melt(id_vars="Stanice", value_vars=columns, var_name=['type'], ignore_index=True).dropna(subset=['value'])
+        if is_text:
+            return table_df
+        return self._parse_string_to_value_and_uom(table_df)
+        
+        
+    def _parse_string_to_value_and_uom(self, table_df : pd.DataFrame) -> pd.DataFrame:
+        table_df['value'].replace('neměřitelné', np.NaN)
+        table_df['value'].replace('roztál', '0 cm')
+        table_df[['value', 'uom']] = table_df['value'].apply(lambda x: re.findall('(\d+\.?\d*)\s?([^\s\(\)]*)', x.replace(',','.'))[0]).tolist()
+        table_df['value'] = table_df['value'].astype(float)
+        return table_df
+    
+    
+    def _parse_hourly_data_row(self, row : BeautifulSoup) -> pd.DataFrame:
+        cells = row.find_all(name='td')
+        values = []
+        for i, cell in enumerate(cells[2:]):
+            values.append(self._parse_cell(cell.text, i))
+        data_df = pd.DataFrame(values)
+        data_df['value_name'] = cells[0].text
+        self.data_df = pd.concat([self.data_df, data_df])
+
 if __name__ == "__main__":
-    ChmiStations()
+    # ChmiStations()
+    DataTable(r"st_pudni_teploty_cz.html",
+              hourly_value_columns = [1,2,3,4,5]
+    )
+    #TODO parse timestamp from column
+    DataTable(r"st_oblacnost_cz.html",
+              daily_text_column = [1,2,3],
+              hourly_value_columns = [4,5]
+    )
+    #TODO parse timestamp from column
+    DataTable(r"st_srazky_cz.html",
+              hourly_value_columns = [1,2,3],
+              daily_value_columns = [4,5,6,7]
+    )
+    DataTable(r"st_vitr_cz.html",
+              hourly_value_columns = [1,2,3]
+    )
+    DataTable(r"st_tlaky_cz.html",
+              hourly_value_columns = [1,2,3]
+    )
+    DataTable(r"st_teploty_cz.html",
+              hourly_value_columns = [1,2,3],
+              daily_value_columns = [4,5,6,7]
+    )
     i = 1
